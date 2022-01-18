@@ -11,8 +11,13 @@ public class MainManager : MonoBehaviour
     public Rigidbody Ball;
 
     public Text ScoreText;
+    public Text BestScoreText;
+    public InputField WinnerName;
     public GameObject GameOverText;
-    
+
+    public GameObject NewWinnerPanel;
+    public GameObject ButtonPanel;
+
     private bool m_Started = false;
     private int m_Points;
     
@@ -24,7 +29,12 @@ public class MainManager : MonoBehaviour
     {
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
-        
+
+        UpdateHighScoreText();
+        GameOverText.SetActive(false);
+        NewWinnerPanel.SetActive(false);
+        ButtonPanel.SetActive(false);
+
         int[] pointCountArray = new [] {1,1,2,2,5,5};
         for (int i = 0; i < LineCount; ++i)
         {
@@ -55,10 +65,10 @@ public class MainManager : MonoBehaviour
         }
         else if (m_GameOver)
         {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            }
+            //if (Input.GetKeyDown(KeyCode.Space))
+            //{
+            //    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            //}
         }
     }
 
@@ -72,5 +82,42 @@ public class MainManager : MonoBehaviour
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+
+        var topScore = ScoreKeeper.Instance.TopScore;
+        if (topScore == null || m_Points > topScore.score)
+        {
+            NewWinnerPanel.SetActive(true);
+        }
+        ButtonPanel.SetActive(true);
+
+    }
+
+    public void Restart()
+    {
+        UpdateHighScoresIfNeeded();
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    public void GoToMainMenu()
+    {
+        UpdateHighScoresIfNeeded();
+        SceneManager.LoadScene(0);
+    }
+
+    private void UpdateHighScoresIfNeeded()
+    {
+        var topScore = ScoreKeeper.Instance.TopScore;
+        if (topScore == null || m_Points > topScore.score)
+        {
+            ScoreKeeper.Instance.AddHighScore(WinnerName.text, m_Points);
+            NewWinnerPanel.SetActive(false);
+        }
+        UpdateHighScoreText();
+    }
+
+    private void UpdateHighScoreText()
+    {
+        var topScore = ScoreKeeper.Instance?.TopScore;
+        BestScoreText.text = "Best score: " + (topScore == null ? "[None]" : $"{topScore.name}: {topScore.score}");
     }
 }
